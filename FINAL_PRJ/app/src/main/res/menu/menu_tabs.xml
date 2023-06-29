@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/tab_refrigerator_state"
+        app:showAsAction="always"
+        android:enabled="true"
+        android:title="냉장고 상태"
+        android:icon="@drawable/door"
+        />
+
+    <item
+        android:id="@+id/tab_recommend_snack"
+        app:showAsAction="always"
+        android:enabled="true"
+        android:title="안주 추천"
+        android:icon="@drawable/food"
+        />
+
+    <item
+        android:id="@+id/tab_recommend_cocktail"
+        app:showAsAction="always"
+        android:enabled="true"
+        android:title="칵테일/주류 추천"
+        android:icon="@drawable/drinks"
+        />
+
+    <item
+        android:id="@+id/tab_community"
+        app:showAsAction="always"
+        android:enabled="true"
+        android:title="커뮤니티"
+        android:icon="@drawable/community"
+        />
+</menu>
