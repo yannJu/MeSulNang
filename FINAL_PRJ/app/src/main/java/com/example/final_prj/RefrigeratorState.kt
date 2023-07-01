@@ -51,6 +51,8 @@ class RefrigeratorState : Fragment() {
         _binding = FragmentRefrigeratorStateBinding.inflate(inflater, container, false)
         var webView = binding.listRefrigerator
         var tempTxt = binding.txtEditTemp
+        var infoTempTxt = binding.txtNowTemp
+        var infoFuncTxt = binding.txtSelectFunc
         var spinner = binding.spinnerFunc
         var itemList = resources.getStringArray(R.array.itemList)
         var adapter = ArrayAdapter<String>(requireActivity(), android.R.layout.simple_list_item_1, itemList)
@@ -74,9 +76,28 @@ class RefrigeratorState : Fragment() {
                 if (topic != null && mqttMessage != null) {
                     if (topic == "refri/refriname") {
                         refriName = msg
+
+                        if (msg == "") { // Main 인 경우
+                            mainActivity.runOnUiThread {
+                                infoTempTxt.visibility = View.INVISIBLE
+                                infoFuncTxt.visibility = View.INVISIBLE
+                                tempTxt.visibility = View.INVISIBLE
+                                spinner.visibility = View.INVISIBLE
+                            }
+                        }
+                        else {
+                            // View들 띄우기
+                            mainActivity.runOnUiThread {
+                                infoTempTxt.visibility = View.VISIBLE
+                                infoFuncTxt.visibility = View.VISIBLE
+                                tempTxt.visibility = View.VISIBLE
+                                spinner.visibility = View.VISIBLE
+                            }
+                        }
                     }
 
                     if (topic == "${refriName}/refri/sensors/temp") {
+                        while(tempTxt.visibility == View.INVISIBLE) {}
                         mainActivity.runOnUiThread {
                             tempTxt.text = msg
                         }
@@ -89,7 +110,6 @@ class RefrigeratorState : Fragment() {
                         // Activity 시작하기
                         mainActivity.finish()
                         startActivity(intent)
-                        mqttClient.disconnect()
                     }
                 }
             }
@@ -97,7 +117,7 @@ class RefrigeratorState : Fragment() {
                 println("Message delivered")
             }
         })
-        mqttClient.subscribe(arrayOf("${mainActivity.ID}/refri/sensors/temp", "refri/logout"))
+        mqttClient.subscribe(arrayOf("${mainActivity.ID}/refri/sensors/temp", "refri/logout", "refri/refriname"))
         // MQTT ------------------------------
 
         // Spinner ----------------------------

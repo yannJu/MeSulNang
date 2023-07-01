@@ -25,8 +25,11 @@ class AnalyzeDrunkResult : Fragment() {
     var _binding: FragmentAnalyzeDrunkResultBinding? = null
     val binding get() = _binding!!
     lateinit var mainActivity:MainActivity
-    lateinit var awsID:awsID
 
+    // S3 -------------
+    val AWS_STORAGE_BUCKET_NAME = awsID().AWS_STORAGE_BUCKET_NAME
+    val AWS_POOL_ID = awsID().AWS_POOL_ID
+    // S3 -------------
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
@@ -40,7 +43,6 @@ class AnalyzeDrunkResult : Fragment() {
 
         _binding = FragmentAnalyzeDrunkResultBinding.inflate(inflater, container, false)
         mainActivity = activity as MainActivity
-        awsID = activity as awsID
 
         var analyze_img = File("${mainActivity.recordingFilePath}/${mainActivity.saveCamFile}")
         var analyze_voice_model = File("${mainActivity.recordingFilePath}/${mainActivity.saveMicModelFile}")
@@ -65,7 +67,7 @@ class AnalyzeDrunkResult : Fragment() {
 
         val credentialsProvider = CognitoCachingCredentialsProvider(
             mainActivity,
-            awsID.AWS_POOL_ID, // 자격 증명 풀 ID
+            AWS_POOL_ID, // 자격 증명 풀 ID
             Regions.US_EAST_2 // 리전 (ck 해야함)
         )
 
@@ -73,7 +75,7 @@ class AnalyzeDrunkResult : Fragment() {
 
         val transferUtility = TransferUtility.builder()
             .context(mainActivity)
-            .defaultBucket(awsID.AWS_STORAGE_BUCKET_NAME)
+            .defaultBucket(AWS_STORAGE_BUCKET_NAME)
             .s3Client(AmazonS3Client(credentialsProvider, Region.getRegion(Regions.US_EAST_2)))
             .build()
 

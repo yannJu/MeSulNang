@@ -3,6 +3,7 @@ package com.example.final_prj
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
@@ -15,6 +16,7 @@ import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 import java.io.File
+import kotlin.concurrent.timer
 
 class MainActivity : AppCompatActivity() {
     lateinit var tab_refrigerator_state:RefrigeratorState
@@ -30,9 +32,8 @@ class MainActivity : AppCompatActivity() {
     val TAG = "[[MainActivity]]"
 
     // Mqtt ----------------------
-//    val URL = "http://ex-alb-1767737241.us-east-2.elb.amazonaws.com"
-    val URL = "http://10.0.0.254:8000"
-    val brokerUrl = "tcp://10.0.0.254:1883" // aws IP
+    val URL = "http://ex-alb-1767737241.us-east-2.elb.amazonaws.com"
+    val brokerUrl = "tcp://team4-mqtt-lb-2494f2a6d28b9a68.elb.us-east-2.amazonaws.com:1883" // aws IP
 //    val URL = "http://172.20.10.5:8000"
 //    val brokerUrl = "tcp://172.20.10.5:1883" //Android IP
     lateinit var mqttClient: MqttClient
@@ -45,6 +46,9 @@ class MainActivity : AppCompatActivity() {
     val saveCamFile = "${ID}_analyze_img.jpg"
     val saveMicModelFile = "${ID}_model_record.mp4"
     val saveMicFile = "${ID}_record.mp4"
+
+    // back btn
+    var isBackBtnClick = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -145,5 +149,15 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         mqttClient.disconnect()
+    }
+
+    override fun onBackPressed() {
+        if (isBackBtnClick == 0) {
+            isBackBtnClick += 1
+            Toast.makeText(this, "한번 더 누르면 프로그램이 종료됩니다 . .", Toast.LENGTH_SHORT).show()
+        }
+        else {
+            super.onBackPressed()
+        }
     }
 }

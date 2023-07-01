@@ -9,6 +9,7 @@ import android.webkit.SslErrorHandler
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.example.final_prj.databinding.LoginMainBinding
@@ -24,12 +25,14 @@ class LoginMain : AppCompatActivity() {
     val TAG = "[[Tab_Login]]"
     val binding by lazy { LoginMainBinding.inflate(layoutInflater) }
     // Mqtt ----------------------
-    val URL = "http://10.0.0.254:8000"
-    val brokerUrl = "tcp://10.0.0.254:1883" // aws IP
+    val URL = "http://ex-alb-1767737241.us-east-2.elb.amazonaws.com"
+    val brokerUrl = "tcp://team4-mqtt-lb-2494f2a6d28b9a68.elb.us-east-2.amazonaws.com:1883" // aws IP
 //    val URL = "http://172.20.10.5:8000"
 //    val brokerUrl = "tcp://172.20.10.5:1883" //Android IP
     lateinit var mqttClient: MqttClient
     // Mqtt ----------------------
+
+    var isBackBtnClick = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,5 +102,15 @@ class LoginMain : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         mqttClient.disconnect()
+    }
+
+    override fun onBackPressed() {
+        if (isBackBtnClick == 0) {
+            isBackBtnClick += 1
+            Toast.makeText(this, "한번 더 누르면 프로그램이 종료됩니다 . .", Toast.LENGTH_SHORT).show()
+        }
+        else {
+            super.onBackPressed()
+        }
     }
 }
