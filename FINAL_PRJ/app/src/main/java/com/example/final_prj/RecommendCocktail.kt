@@ -1,7 +1,9 @@
 package com.example.final_prj
 
+import android.content.Intent
 import android.net.http.SslError
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +14,10 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.example.final_prj.databinding.FragmentRecommendCocktailBinding
 import com.example.final_prj.databinding.FragmentRefrigeratorStateBinding
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
+import org.eclipse.paho.client.mqttv3.MqttCallback
+import org.eclipse.paho.client.mqttv3.MqttException
+import org.eclipse.paho.client.mqttv3.MqttMessage
 
 class RecommendCocktail : Fragment() {
     val TAG = "[[Tab_RecommendCocktail]]"
@@ -52,6 +58,40 @@ class RecommendCocktail : Fragment() {
             txtInfo.text = "지역(시/군/구)을 입력하시면 해당 지역의 날씨에 따라 주류를 추천받을 수 있습니다 ^ . ^"
             webView.loadUrl("${URL}")
         }
+
+        // MQTT ------------------------------
+        val mqttClient = mainActivity.mqttClient
+
+        mqttClient.setCallback(object : MqttCallback {
+            override fun connectionLost(throwable: Throwable?) {
+                throwable?.printStackTrace()
+                try {
+                    mqttClient.reconnect()
+                } catch(ex: MqttException){
+                    ex.printStackTrace()
+                }
+            }
+            override fun messageArrived(topic: String?, mqttMessage: MqttMessage?) {
+                val msg = mqttMessage.toString()
+                if (topic != null && mqttMessage != null) {
+                    if (topic == "refri/logout") {
+                        Log.d(TAG, "logout ${msg}")
+
+                        // Intent 생성
+                        val intent = Intent(mainActivity, LoginMain::class.java)
+
+                        // Activity 시작하기
+                        mainActivity.finish()
+                        startActivity(intent)
+                    }
+                }
+            }
+            override fun deliveryComplete(token: IMqttDeliveryToken?) {
+                println("Message delivered")
+            }
+        })
+        mqttClient.subscribe("refri/logout")
+        // MQTT ------------------------------
 
         // WebView ----------------------------
         webView.settings.javaScriptEnabled = true

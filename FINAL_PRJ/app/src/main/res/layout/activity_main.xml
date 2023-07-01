@@ -14,7 +14,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:enabled="true"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:tabIconTint="@android:color/system_accent2_400"
+        app:tabRippleColor="#94A388"
+        app:tabTextColor="#233C08">
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"

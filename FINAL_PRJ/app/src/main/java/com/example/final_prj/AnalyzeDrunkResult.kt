@@ -1,5 +1,7 @@
 package com.example.final_prj
 
+import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -18,6 +20,11 @@ import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.CannedAccessControlList
 import com.bumptech.glide.Glide
 import com.example.final_prj.databinding.FragmentAnalyzeDrunkResultBinding
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
+import org.eclipse.paho.client.mqttv3.MqttCallback
+import org.eclipse.paho.client.mqttv3.MqttClient
+import org.eclipse.paho.client.mqttv3.MqttException
+import org.eclipse.paho.client.mqttv3.MqttMessage
 import java.io.File
 
 class AnalyzeDrunkResult : Fragment() {
@@ -25,6 +32,9 @@ class AnalyzeDrunkResult : Fragment() {
     var _binding: FragmentAnalyzeDrunkResultBinding? = null
     val binding get() = _binding!!
     lateinit var mainActivity:MainActivity
+
+    private lateinit var mqttClient: MqttClient
+    var URL = ""
 
     // S3 -------------
     val AWS_STORAGE_BUCKET_NAME = awsID().AWS_STORAGE_BUCKET_NAME
@@ -55,9 +65,91 @@ class AnalyzeDrunkResult : Fragment() {
         // layout Views =============
         var txtLoad = binding.txtLoading
         var gifLoad = binding.imgLoading
+        var txtwarn = binding.txtLoadingWarn
+        var resultImg = binding.imgResult
+        var txtResult = binding.txtResult
+        var txtResultMsg = binding.txtResultMsg
+        var btnReturn = binding.btnReturn
+
+        // 취함 결과 Result Array (0: 안취함, 1: 보통, 2:  취함)
+        var imgAry = arrayOf(R.drawable.drunk_img0, R.drawable.drunk_img1, R.drawable.drunk_img2)
+        var resultAry = arrayOf(
+            "지금부터 시작이야아",
+            "술기운이 올라와요~",
+            "취하셨군요!"
+        )
+        var resultColorAry = arrayOf("#75d327", "#eb9e3a","#f57f7f")
+        var msgAry = arrayOf(
+            "술을 마신다고 문제가 \n해결되는 것은 아니지만\n우유를 마신다고 \n해결되는 것도 없다\n\n-스코틀랜드 격언",
+            "술을 물처럼 마시는 자는\n술을 마실 가치가 없다\n\n-프리드리히 V. 보덴슈테트",
+            "술잔과 입술 사이에는 \n많은 실수가 있다\n\n-팔라다스"
+        )
 
         // GIF
         Glide.with(this).load(R.raw.soju).into(gifLoad)
+
+        // Btn Event -------------------------
+        btnReturn.setOnClickListener {
+            mainActivity!!.changeFragment(1)
+        }
+
+        // MQTT ------------------------------
+        mqttClient = mainActivity.mqttClient
+
+        mqttClient.setCallback(object : MqttCallback {
+            override fun connectionLost(throwable: Throwable?) {
+                throwable?.printStackTrace()
+                try {
+                    mqttClient.reconnect()
+                } catch(ex: MqttException){
+                    ex.printStackTrace()
+                }
+            }
+            override fun messageArrived(topic: String?, mqttMessage: MqttMessage?) {
+                val msg = mqttMessage.toString()
+                Log.d(TAG, "${topic}->[[${msg}]]")
+                if (topic != null && mqttMessage != null) {
+                    if (topic == "analyze/result") {
+                        mainActivity.runOnUiThread {
+                            // 기존 View visible -> GONE
+                            txtwarn.visibility = View.GONE
+                            txtLoad.visibility = View.GONE
+                            gifLoad.visibility = View.GONE
+                            // View 띄우기
+                            txtResult.visibility = View.VISIBLE
+                            txtResultMsg.visibility = View.VISIBLE
+                            resultImg.visibility = View.VISIBLE
+                            // 결과에 따라 값 다르게 주기
+                            if (msg == "0") {
+                                txtResult.text = resultAry[0]
+                                txtResult.setTextColor(Color.parseColor(resultColorAry[0]))
+                                txtResultMsg.text = msgAry[0]
+                                resultImg.setImageResource(imgAry[0])
+                            }
+                            else if (msg == "1") {
+                                txtResult.text = resultAry[1]
+                                txtResult.setTextColor(Color.parseColor(resultColorAry[1]))
+                                txtResultMsg.text = msgAry[1]
+                                resultImg.setImageResource(imgAry[1])
+                            }
+                            else if (msg == "2") {
+                                txtResult.text = resultAry[2]
+                                txtResult.setTextColor(Color.parseColor(resultColorAry[2]))
+                                txtResultMsg.text = msgAry[2]
+                                resultImg.setImageResource(imgAry[2])
+                            }
+
+                            btnReturn.visibility = View.VISIBLE
+                        }
+                    }
+                }
+            }
+            override fun deliveryComplete(token: IMqttDeliveryToken?) {
+                println("Message delivered")
+            }
+        })
+        mqttClient.subscribe("analyze/result")
+        // MQTT ------------------------------
 
         return binding.root
     }
@@ -66,15 +158,15 @@ class AnalyzeDrunkResult : Fragment() {
     fun uploadWithTransferUtility(fileName: String, file: File) {
 
         val credentialsProvider = CognitoCachingCredentialsProvider(
-            mainActivity,
+            context,
             AWS_POOL_ID, // 자격 증명 풀 ID
             Regions.US_EAST_2 // 리전 (ck 해야함)
         )
 
-        TransferNetworkLossHandler.getInstance(mainActivity)
+        TransferNetworkLossHandler.getInstance(context)
 
         val transferUtility = TransferUtility.builder()
-            .context(mainActivity)
+            .context(context)
             .defaultBucket(AWS_STORAGE_BUCKET_NAME)
             .s3Client(AmazonS3Client(credentialsProvider, Region.getRegion(Regions.US_EAST_2)))
             .build()
@@ -110,4 +202,25 @@ class AnalyzeDrunkResult : Fragment() {
 
         }
     }
+
+    // sol2
+//    setTransferListener(new TransferListener() {
+//        @Override
+//        public void onStateChanged(int id, TransferState state) {
+//            Log.d(TAG, "onStateChanged: " + id + ", " + state.toString());
+//
+//        }
+//
+//        @Override
+//        public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
+//            float percentDonef = ((float) bytesCurrent / (float) bytesTotal) * 100;
+//            int percentDone = (int)percentDonef;
+//            Log.d(TAG, "ID:" + id + " bytesCurrent: " + bytesCurrent + " bytesTotal: " + bytesTotal + " " + percentDone + "%");
+//        }
+//
+//        @Override
+//        public void onError(int id, Exception ex) {
+//            Log.e(TAG, ex.getMessage());
+//        }
+//    });
 }

@@ -1,5 +1,6 @@
 package com.example.final_prj
 
+import android.content.DialogInterface
 import android.content.Intent
 import android.net.http.SslError
 import android.os.Bundle
@@ -8,10 +9,14 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.JsResult
 import android.webkit.SslErrorHandler
+import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import com.example.final_prj.databinding.FragmentAnalyzeDrunkResultBinding
 import com.example.final_prj.databinding.FragmentCommunityBinding
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
@@ -66,7 +71,6 @@ class Community : Fragment() {
                         val intent = Intent(mainActivity, LoginMain::class.java)
 
                         // Activity 시작하기
-                        mqttClient.disconnect()
                         mainActivity.finish()
                         startActivity(intent)
                     }
@@ -80,6 +84,12 @@ class Community : Fragment() {
         // MQTT ------------------------------
 
         // WebView ----------------------------
+        webView.webChromeClient = object : WebChromeClient(){
+            override fun onJsConfirm(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
+                onJsConfirm(message!!, result!!)
+                return true }
+        }
+
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
         webView.settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
@@ -97,5 +107,25 @@ class Community : Fragment() {
         // WebView ----------------------------
 
         return binding.root
+    }
+
+    fun onJsConfirm(message : String, result : JsResult) : Unit {
+        val builder = AlertDialog.Builder(mainActivity)
+        builder.setTitle("삭제 경고")
+        builder.setMessage(message) // 버튼 클릭 이벤트
+
+        val listener = DialogInterface.OnClickListener { _, clickEvent ->
+            when (clickEvent) {
+                DialogInterface.BUTTON_POSITIVE ->{
+                    result.confirm()
+                }
+                DialogInterface.BUTTON_NEUTRAL -> {
+                    result.cancel()
+                }
+            }
+        }
+        builder.setPositiveButton(android.R.string.ok, listener)
+        builder.setNeutralButton(android.R.string.cancel, listener)
+        builder.show()
     }
 }

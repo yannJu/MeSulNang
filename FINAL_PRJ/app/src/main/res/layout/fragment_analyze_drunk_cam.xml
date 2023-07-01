@@ -16,6 +16,7 @@
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        android:background="@drawable/btn_round"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
     <ImageView

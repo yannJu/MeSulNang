@@ -79,10 +79,10 @@ class RefrigeratorState : Fragment() {
 
                         if (msg == "") { // Main 인 경우
                             mainActivity.runOnUiThread {
-                                infoTempTxt.visibility = View.INVISIBLE
-                                infoFuncTxt.visibility = View.INVISIBLE
-                                tempTxt.visibility = View.INVISIBLE
-                                spinner.visibility = View.INVISIBLE
+                                infoTempTxt.visibility = View.GONE
+                                infoFuncTxt.visibility = View.GONE
+                                tempTxt.visibility = View.GONE
+                                spinner.visibility = View.GONE
                             }
                         }
                         else {
@@ -97,7 +97,7 @@ class RefrigeratorState : Fragment() {
                     }
 
                     if (topic == "${refriName}/refri/sensors/temp") {
-                        while(tempTxt.visibility == View.INVISIBLE) {}
+                        while(tempTxt.visibility != View.VISIBLE) {}
                         mainActivity.runOnUiThread {
                             tempTxt.text = msg
                         }
