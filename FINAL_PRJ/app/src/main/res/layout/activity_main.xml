@@ -6,13 +6,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingTop="40dp"
-    android:paddingBottom="40dp"
+    android:paddingBottom="60dp"
     tools:context=".MainActivity">
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tab_menu"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:enabled="true"
         app:layout_constraintBottom_toBottomOf="parent">
 
@@ -25,14 +25,14 @@
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:icon="@drawable/food"
-            android:text="안주 추천" />
+            android:icon="@drawable/drinks"
+            android:text="주류 추천" />
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:icon="@drawable/drinks"
-            android:text="주류 추천" />
+            android:icon="@drawable/report"
+            android:text="주류 소비\n리포트" />
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
@@ -44,7 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:icon="@drawable/analyze"
-            android:text="취함정도 분석" />
+            android:text="취함정도\n분석" />
     </com.google.android.material.tabs.TabLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

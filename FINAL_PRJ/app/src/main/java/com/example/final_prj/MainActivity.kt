@@ -11,93 +11,64 @@ import com.google.android.material.tabs.TabLayout
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttCallback
 import org.eclipse.paho.client.mqttv3.MqttClient
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
     lateinit var tab_refrigerator_state:RefrigeratorState
     lateinit var tab_recommend_cocktail:RecommendCocktail
-    lateinit var tab_recommend_snacks:RecommendSnack
+    lateinit var tab_drink_report:DrinkReport
     lateinit var tab_community:Community
     lateinit var tab_analyze_drunk:AnalyzeDrunk
     lateinit var tab_analyze_drunk_cam:AnalyzeDrunkCam
     lateinit var tab_analyze_drunk_mic:AnalyzeDrunkMic
     lateinit var tab_analyze_drunk_result:AnalyzeDrunkResult
-    lateinit var imgByteArray:ByteArray
 
     var ID = ""
     val TAG = "[[MainActivity]]"
 
     // Mqtt ----------------------
 //    val URL = "http://ex-alb-1767737241.us-east-2.elb.amazonaws.com"
-    val URL = "http://172.30.1.43:8000"
-    val brokerUrl = "tcp://172.30.1.43:1883" //Android IP
+    val URL = "http://10.0.0.254:8000"
+    val brokerUrl = "tcp://10.0.0.254:1883" // aws IP
+//    val URL = "http://172.20.10.5:8000"
+//    val brokerUrl = "tcp://172.20.10.5:1883" //Android IP
     lateinit var mqttClient: MqttClient
     val clientID = "client_main"
     // Mqtt ----------------------
-    // External Mem Dir
 
-    val recordingFilePath = "/data/data/com.example.final_prj/cache"
+    // External Mem Dir ----------
+    val recordingFilePath = "/data/data/com.example.final_prj/analyze"
+    val filePath = File(recordingFilePath)
+    val saveCamFile = "${ID}_analyze_img.jpg"
+    val saveMicModelFile = "${ID}_model_record.mp4"
+    val saveMicFile = "${ID}_record.mp4"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
+        if (!filePath.exists()) filePath.mkdirs() // 폴더가 없다면 폴더 생성
 
         var binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         // ID 출력
-//        ID = intent.getStringExtra("ID")!!
-//        Log.d(TAG, "ID : ${ID}")
-
+        ID = intent.getStringExtra("ID")!!
+        Log.d(TAG, "ID : ${ID}")
         // MQTT ------------------------------
         try {
             mqttClient = MqttClient(brokerUrl, clientID, MemoryPersistence())
-//            val options = MqttConnectOptions()
-//            options.connectionTimeout = 5
-//            mqttClient.connect(options)
             mqttClient.connect()
         } catch(ex: MqttException) {
             ex.printStackTrace()
         }
 
-        mqttClient.setCallback(object : MqttCallback {
-            override fun connectionLost(throwable: Throwable?) {
-                throwable?.printStackTrace()
-                try {
-                    mqttClient.reconnect()
-                } catch(ex: MqttException){
-                    ex.printStackTrace()
-                }
-            }
-            override fun messageArrived(topic: String?, mqttMessage: MqttMessage?) {
-                if (topic != null && mqttMessage != null && topic == "refri/logout") {
-                    val msg = mqttMessage.toString()
-                    Log.d(TAG, msg)
-
-                    if (msg == "success") {
-                        // Intent 생성
-                        val intent = Intent(this@MainActivity, LoginMain::class.java)
-
-                        // Activity 시작하기
-                        finish()
-                        startActivity(intent)
-                    }
-                }
-            }
-            override fun deliveryComplete(token: IMqttDeliveryToken?) {
-                println("Message delivered")
-            }
-        })
-//        mqttClient.subscribe("refri/logout")
-        // MQTT ------------------------------
-
         // tab 과 프래그먼트 연결
         tab_refrigerator_state = RefrigeratorState()
         tab_recommend_cocktail = RecommendCocktail()
-        tab_recommend_snacks = RecommendSnack()
+        tab_drink_report = DrinkReport()
         tab_community = Community()
         tab_analyze_drunk = AnalyzeDrunk()
         tab_analyze_drunk_cam = AnalyzeDrunkCam()
@@ -116,11 +87,11 @@ class MainActivity : AppCompatActivity() {
                     }
                     1 -> {
                         // recommend snack Tab
-                        replaceView(tab_recommend_snacks)
+                        replaceView(tab_recommend_cocktail)
                     }
                     2 -> {
                         // recommend cocktail Tab
-                        replaceView(tab_recommend_cocktail)
+                        replaceView(tab_drink_report)
                     }
                     3 -> {
                         // community tab
@@ -169,5 +140,10 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.Constraint, it).commit()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mqttClient.disconnect()
     }
 }

@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.OutputStream
 
 class AnalyzeDrunkCam : Fragment() {
     val TAG = "[[Tab_AnalyzeDrunk_CAM]]"
@@ -112,7 +113,8 @@ class AnalyzeDrunkCam : Fragment() {
     // 카메라 촬영 후 이미지 받아오기 ====
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        var outputStream = ByteArrayOutputStream()
+        val file = File(mainActivity.filePath, "${mainActivity.saveCamFile}")
+        var outputStream: OutputStream? = null
 
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             val imageBitmap = data?.extras?.get("data") as Bitmap
@@ -122,8 +124,10 @@ class AnalyzeDrunkCam : Fragment() {
             imgView.setImageBitmap(imageBitmap)
 
             // bitmap to bytearray
-            imageBitmap.compress(Bitmap.CompressFormat.PNG, 80, outputStream)
-            mainActivity.imgByteArray = outputStream.toByteArray()
+            file.createNewFile()
+            outputStream = FileOutputStream(file)
+            imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream) // jpg 로 변환
+            outputStream.close() // Stream 닫기
 
             // 다음 버튼 생성
             btnNext.visibility = View.VISIBLE

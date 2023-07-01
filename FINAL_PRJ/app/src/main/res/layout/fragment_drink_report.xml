@@ -5,10 +5,10 @@
     android:id="@+id/layout_recommend_snack"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".RecommendSnack">
+    tools:context=".DrinkReport">
 
     <WebView
-        android:id="@+id/list_recommend_snack"
+        android:id="@+id/list_drink_report"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="100dp"

@@ -1,6 +1,8 @@
 package com.example.final_prj
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.net.http.SslError
 import android.os.Bundle
 import android.util.Log
@@ -30,14 +32,12 @@ class RefrigeratorState : Fragment() {
     var _binding:FragmentRefrigeratorStateBinding? = null
     val binding get() = _binding!!
     var URL = ""
-    var brokerUrl = ""
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
         // Context를 Activity로 형변환하여 할당
         mainActivity = context as MainActivity
         URL = mainActivity.URL
-        brokerUrl = mainActivity.brokerUrl
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,6 +54,7 @@ class RefrigeratorState : Fragment() {
         var spinner = binding.spinnerFunc
         var itemList = resources.getStringArray(R.array.itemList)
         var adapter = ArrayAdapter<String>(requireActivity(), android.R.layout.simple_list_item_1, itemList)
+        var refriName = ""
 
         // MQTT ------------------------------
         mqttClient = mainActivity.mqttClient
@@ -68,12 +69,27 @@ class RefrigeratorState : Fragment() {
                 }
             }
             override fun messageArrived(topic: String?, mqttMessage: MqttMessage?) {
-                if (topic != null && mqttMessage != null && topic == "refri/sensors/temp") {
-                    val temp = mqttMessage.toString()
+                val msg = mqttMessage.toString()
+                Log.d(TAG, "${topic}->[[${msg}]]")
+                if (topic != null && mqttMessage != null) {
+                    if (topic == "refri/refriname") {
+                        refriName = msg
+                    }
 
-                    Log.d(TAG, temp)
-                    mainActivity.runOnUiThread {
-                        tempTxt.text = temp
+                    if (topic == "${refriName}/refri/sensors/temp") {
+                        mainActivity.runOnUiThread {
+                            tempTxt.text = msg
+                        }
+                    }
+
+                    if (topic == "refri/logout" && msg == "success") {
+                        // Intent 생성
+                        val intent = Intent(mainActivity, LoginMain::class.java)
+
+                        // Activity 시작하기
+                        mainActivity.finish()
+                        startActivity(intent)
+                        mqttClient.disconnect()
                     }
                 }
             }
@@ -81,7 +97,7 @@ class RefrigeratorState : Fragment() {
                 println("Message delivered")
             }
         })
-//        mqttClient.subscribe("refri/sensors/temp")
+        mqttClient.subscribe(arrayOf("${mainActivity.ID}/refri/sensors/temp", "refri/logout"))
         // MQTT ------------------------------
 
         // Spinner ----------------------------

@@ -10,13 +10,12 @@ import android.webkit.SslErrorHandler
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import com.example.final_prj.databinding.FragmentRecommendSnackBinding
-import com.example.final_prj.databinding.FragmentRefrigeratorStateBinding
+import com.example.final_prj.databinding.FragmentDrinkReportBinding
 
-class RecommendSnack : Fragment() {
+class DrinkReport : Fragment() {
     val TAG = "[[Tab_RecommendSnack]]"
     lateinit var mainActivity:MainActivity
-    var _binding: FragmentRecommendSnackBinding? = null
+    var _binding: FragmentDrinkReportBinding? = null
     val binding get() = _binding!!
     var URL = ""
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,8 +30,8 @@ class RecommendSnack : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        _binding = FragmentRecommendSnackBinding.inflate(inflater, container, false)
-        var webView = binding.listRecommendSnack
+        _binding = FragmentDrinkReportBinding.inflate(inflater, container, false)
+        var webView = binding.listDrinkReport
 
         // WebView ----------------------------
         webView.settings.javaScriptEnabled = true
@@ -48,7 +47,7 @@ class RecommendSnack : Fragment() {
                 handler?.proceed()
             }
         }
-        webView.loadUrl("http://www.naver.com")
+        webView.loadUrl("${URL}/report/")
         // WebView ----------------------------
 
         return binding.root

@@ -15,6 +15,7 @@ import com.example.final_prj.databinding.LoginMainBinding
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttCallback
 import org.eclipse.paho.client.mqttv3.MqttClient
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
@@ -23,25 +24,22 @@ class LoginMain : AppCompatActivity() {
     val TAG = "[[Tab_Login]]"
     val binding by lazy { LoginMainBinding.inflate(layoutInflater) }
     // Mqtt ----------------------
-//    var URL = "http://ex-alb-1767737241.us-east-2.elb.amazonaws.com"
-    val URL = "http://172.30.1.43:8000"
-    val brokerUrl = "tcp://172.30.1.43:1883" //Android IP
-    private lateinit var mqttClient: MqttClient
+    val URL = "http://10.0.0.254:8000"
+    val brokerUrl = "tcp://10.0.0.254:1883" // aws IP
+//    val URL = "http://172.20.10.5:8000"
+//    val brokerUrl = "tcp://172.20.10.5:1883" //Android IP
+    lateinit var mqttClient: MqttClient
     // Mqtt ----------------------
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+        Log.d(TAG, "${TAG} is Create-")
 
         val webView = binding.loginMain
-        val logoImg = binding.imgLogo
-        val gifImg = binding.imgGif
-        // GIF
-        Glide.with(this).load(R.raw.soju).into(gifImg)
 
         // MQTT ------------------------------
-        val clientID = "client_login"
-
+        val clientID = "mesulnang_client"
         try {
             mqttClient = MqttClient(brokerUrl, clientID, MemoryPersistence())
             mqttClient.connect()
@@ -96,5 +94,10 @@ class LoginMain : AppCompatActivity() {
         }
         webView.loadUrl("${URL}/login/")
         // WebView ----------------------------
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mqttClient.disconnect()
     }
 }

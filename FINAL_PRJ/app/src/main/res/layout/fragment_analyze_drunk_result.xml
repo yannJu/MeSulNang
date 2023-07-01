@@ -27,4 +27,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txt_loading"
         tools:src="@tools:sample/avatars" />
+
+    <TextView
+        android:id="@+id/txt_loading_warn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="35dp"
+        android:text="화면을 벗어나지 마세요!\n화면에서 벗어나면 초기화 됩니다."
+        android:textAlignment="center"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/img_loading" />
 </androidx.constraintlayout.widget.ConstraintLayout>

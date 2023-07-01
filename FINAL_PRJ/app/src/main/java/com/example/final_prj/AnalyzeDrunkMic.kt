@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.view.isVisible
@@ -20,6 +21,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.final_prj.databinding.FragmentAnalyzeDrunkBinding
 import com.example.final_prj.databinding.FragmentAnalyzeDrunkCamBinding
 import com.example.final_prj.databinding.FragmentAnalyzeDrunkMicBinding
+import java.io.File
 
 // 녹음 상태와 관련된 class
 enum class State {
@@ -34,7 +36,8 @@ class AnalyzeDrunkMic : Fragment() {
 
     var recordState = State.BEFORE_RECORDING
     var recorder: MediaRecorder ?= null
-    var cnt = 0
+    var isModelExist = false
+    var savePath = ""
 
     // 요청할 권한들을 담을 배열  =================
     private val requiredPermissions = arrayOf(
@@ -49,10 +52,13 @@ class AnalyzeDrunkMic : Fragment() {
     lateinit var mainActivity:MainActivity
     lateinit var btnRecord:ImageView
     lateinit var btnNext:Button
-    lateinit var ckAry:Array<ImageView>
+    lateinit var ckImg:ImageView
+    lateinit var txtFirstMsg:TextView
+    lateinit var txtFirstwarn:TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        isModelExist = false
     }
 
     override fun onCreateView(
@@ -62,16 +68,26 @@ class AnalyzeDrunkMic : Fragment() {
         // Inflate the layout for this fragment
         _binding = FragmentAnalyzeDrunkMicBinding.inflate(inflater, container, false)
         mainActivity = activity as MainActivity
+        val modelFilePath = File("${mainActivity.recordingFilePath}/${mainActivity.saveMicModelFile}")
 
         // Btns ==============================
         var btnBack = binding.btnBack
+        txtFirstMsg = binding.txtMicModelInfo
+        txtFirstwarn = binding.txtWarn
         btnRecord = binding.imgMic
         btnRecord.setImageResource(R.drawable.mic_black)
-
+        ckImg = binding.imgCk
         btnNext = binding.btnMicNext
+        savePath = "${mainActivity.recordingFilePath}/${mainActivity.saveMicModelFile}"
 
-        // Arys ==============================
-        ckAry = arrayOf(binding.imgCk1, binding.imgCk2, binding.imgCk3)
+        // model 음성 데이터가 존재할 경우 isModelExist 변수 동기화
+        // model 음성 데이터가 존재하면 info 텍스트 지우기 + savePath 변경
+        if (modelFilePath.exists()) isModelExist = true
+        if (isModelExist) {
+            txtFirstMsg.text = "분석 데이터 수집을 위해 녹음을 진행합니다."
+            txtFirstwarn.visibility = View.GONE
+            savePath = "${mainActivity.recordingFilePath}/${mainActivity.saveMicFile}"
+        }
 
         // Btn Events ========================
         Log.d(TAG, "${TAG} is Create")
@@ -86,7 +102,17 @@ class AnalyzeDrunkMic : Fragment() {
         }
 
         btnNext.setOnClickListener {
-            mainActivity.changeFragment(4)
+            if (isModelExist) mainActivity.changeFragment(4)
+            else {
+                btnNext.text = "결과보기"
+                btnNext.visibility = View.GONE
+                // 다시 녹음할 수 있도록 ui 수정
+                ckImg.setImageResource(R.drawable.ck_blank)
+                btnRecord.setImageResource(R.drawable.mic_black)
+                txtFirstMsg.text = "분석 데이터 수집을 위해 녹음을 진행합니다."
+                txtFirstwarn.visibility = View.GONE
+                isModelExist = true
+            }
         }
 
         return binding.root
@@ -106,15 +132,16 @@ class AnalyzeDrunkMic : Fragment() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
         if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(mainActivity, "녹음중 REC . . .", Toast.LENGTH_SHORT).show()
             if (recordState == State.BEFORE_RECORDING) {
+                if (!isModelExist) Toast.makeText(mainActivity, "최초 데이터 녹음중 REC . . .", Toast.LENGTH_SHORT).show()
+                else Toast.makeText(mainActivity, "취함 분석 데이터 녹음중 REC . . .", Toast.LENGTH_SHORT).show()
                 startRecording()
                 btnRecord.setImageResource(R.drawable.mic_red)
             }
             else {
                 stopRecording()
-                if (cnt < 3) btnRecord.setImageResource(R.drawable.mic_black)
-                else btnRecord.setImageResource(R.drawable.btn_mic_block)
+                if (isModelExist) btnRecord.setImageResource(R.drawable.btn_mic_block)
+                else savePath = "${mainActivity.recordingFilePath}/${mainActivity.saveMicFile}"
             }
         }
         else {
@@ -128,19 +155,18 @@ class AnalyzeDrunkMic : Fragment() {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4) //format
                 setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT) //인코더
-                setOutputFile("${mainActivity.recordingFilePath}/recording_${cnt}.mp4")
+                setOutputFile(savePath)
                 prepare()
             }
 
         recorder!!.start()
         recordState = State.ON_RECORDING
-        Log.d(TAG, "${mainActivity.recordingFilePath}/recording_${cnt}.mp4 << Recording . . >>")
+        Log.d(TAG, "${savePath} << Recording . . >>")
     }
 
     private fun stopRecording() {
-        var ckImg = ckAry.get(cnt)
         recorder?.run {
-            Log.d(TAG, "${mainActivity.recordingFilePath}/recording_${cnt}.mp4 << Recording STOP >>")
+            Log.d(TAG, "${savePath} << Recording STOP >>")
             stop()
             reset()
             release()
@@ -150,11 +176,10 @@ class AnalyzeDrunkMic : Fragment() {
         recordState = State.BEFORE_RECORDING
 
         ckImg.setImageResource(R.drawable.ck_green)
-        cnt += 1
-
-        if (cnt == 3) {
+        btnNext.visibility = View.VISIBLE
+        if (isModelExist) {
             btnRecord.isClickable = false
-            btnNext.visibility = View.VISIBLE
+            btnNext.text = "결과보기"
         }
     }
 }
