@@ -12,20 +12,18 @@ import android.webkit.SslErrorHandler
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import com.example.final_prj.databinding.FragmentRecommendCocktailBinding
-import com.example.final_prj.databinding.FragmentRefrigeratorStateBinding
+import com.example.final_prj.databinding.FragmentDrinkReportBinding
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttCallback
 import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.MqttMessage
 
-class RecommendCocktail : Fragment() {
-    val TAG = "[[Tab_RecommendCocktail]]"
+class DrinkReport : Fragment() {
+    val TAG = "[[Tab_RecommendSnack]]"
     lateinit var mainActivity:MainActivity
-    var _binding: FragmentRecommendCocktailBinding? = null
+    var _binding: FragmentDrinkReportBinding? = null
     val binding get() = _binding!!
     var URL = ""
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Context를 Activity로 형변환하여 할당
@@ -38,26 +36,9 @@ class RecommendCocktail : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        _binding = FragmentRecommendCocktailBinding.inflate(inflater, container, false)
-        var webView = binding.listRecommendCocktail
-        var txtInfo = binding.txtRecInfo
-        var btnDefault = binding.btnDefault
-        var btnWeather = binding.btnWeather
+        _binding = FragmentDrinkReportBinding.inflate(inflater, container, false)
+        var webView = binding.listDrinkReport
 
-        URL = "${mainActivity.URL}/recommend"
-        txtInfo.text = "좋아하는 주류를 검색하면 유사 주류를 추천받을 수 있습니다 ^ . ^"
-
-        btnDefault.setOnClickListener {
-            URL = "${mainActivity.URL}/recommend"
-            txtInfo.text = "좋아하는 주류를 검색하면 유사 주류를 추천받을 수 있습니다 ^ . ^"
-            webView.loadUrl("${URL}")
-        }
-
-        btnWeather.setOnClickListener {
-            URL = "${mainActivity.URL}/recommend/weather"
-            txtInfo.text = "지역(시/군/구)을 입력하시면 해당 지역의 날씨에 따라 주류를 추천받을 수 있습니다 ^ . ^"
-            webView.loadUrl("${URL}")
-        }
 
         // MQTT ------------------------------
         val mqttClient = mainActivity.mqttClient
@@ -107,7 +88,7 @@ class RecommendCocktail : Fragment() {
                 handler?.proceed()
             }
         }
-        webView.loadUrl("${URL}")
+        webView.loadUrl("${URL}/report/")
         // WebView ----------------------------
 
         return binding.root

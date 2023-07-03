@@ -16,6 +16,7 @@
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        android:background="@drawable/btn_round"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
     <ImageView
@@ -52,10 +53,21 @@
         android:id="@+id/img_cap"
         android:layout_width="279dp"
         android:layout_height="384dp"
-        android:layout_marginTop="150dp"
+        android:layout_marginTop="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView"
         tools:src="@tools:sample/avatars" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="140dp"
+        android:text="분석데이터 수집을 위해 이미지를 촬영합니다. \n촬영하기 버튼을 눌러 자신의 얼굴이 제대로 보이도록 촬영해주세요."
+        android:textAlignment="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -2,9 +2,9 @@
 <resources>
     <string-array name="itemList">
         <item>"주종을 선택하세요"</item>
-        <item>"소주/맥주"</item>
-        <item>"와인"</item>
-        <item>"위스키"</item>
-        <item>"사케"</item>
+        <item>"소주/맥주(4~8℃)"</item>
+        <item>"레드와인(15~19℃)"</item>
+        <item>"화이트와인(9~12℃)"</item>
+        <item>"위스키(약 20℃)"</item>
     </string-array>
 </resources>

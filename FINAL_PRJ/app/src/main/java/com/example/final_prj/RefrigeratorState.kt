@@ -1,6 +1,8 @@
 package com.example.final_prj
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.net.http.SslError
 import android.os.Bundle
 import android.util.Log
@@ -30,14 +32,12 @@ class RefrigeratorState : Fragment() {
     var _binding:FragmentRefrigeratorStateBinding? = null
     val binding get() = _binding!!
     var URL = ""
-    var brokerUrl = ""
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
         // Context를 Activity로 형변환하여 할당
         mainActivity = context as MainActivity
         URL = mainActivity.URL
-        brokerUrl = mainActivity.brokerUrl
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,9 +51,12 @@ class RefrigeratorState : Fragment() {
         _binding = FragmentRefrigeratorStateBinding.inflate(inflater, container, false)
         var webView = binding.listRefrigerator
         var tempTxt = binding.txtEditTemp
+        var infoTempTxt = binding.txtNowTemp
+        var infoFuncTxt = binding.txtSelectFunc
         var spinner = binding.spinnerFunc
         var itemList = resources.getStringArray(R.array.itemList)
         var adapter = ArrayAdapter<String>(requireActivity(), android.R.layout.simple_list_item_1, itemList)
+        var refriName = ""
 
         // MQTT ------------------------------
         mqttClient = mainActivity.mqttClient
@@ -68,12 +71,58 @@ class RefrigeratorState : Fragment() {
                 }
             }
             override fun messageArrived(topic: String?, mqttMessage: MqttMessage?) {
-                if (topic != null && mqttMessage != null && topic == "refri/sensors/temp") {
-                    val temp = mqttMessage.toString()
+                val msg = mqttMessage.toString()
+                Log.d(TAG, "${topic}->[[${msg}]]")
+                if (topic != null && mqttMessage != null) {
+                    if (topic == "refri/refriname") {
+                        refriName = msg
 
-                    Log.d(TAG, temp)
-                    mainActivity.runOnUiThread {
-                        tempTxt.text = temp
+                        if (msg == "") { // Main 인 경우
+                            mainActivity.runOnUiThread {
+                                infoTempTxt.visibility = View.GONE
+                                infoFuncTxt.visibility = View.GONE
+                                tempTxt.visibility = View.GONE
+                                spinner.visibility = View.GONE
+                            }
+                        }
+                        else {
+                            // View들 띄우기
+                            mainActivity.runOnUiThread {
+                                infoTempTxt.visibility = View.VISIBLE
+                                infoFuncTxt.visibility = View.VISIBLE
+                                tempTxt.visibility = View.VISIBLE
+                                tempTxt.text = "0℃"
+                                spinner.visibility = View.VISIBLE
+                            }
+                        }
+                        Log.d(TAG, "refriname : ${refriName}")
+                    }
+
+                    if (topic == "refri/sensors/temp") {
+                        val arr = msg.split("/")
+                        Log.d(TAG, "${arr[0]}, ${arr[1]}")
+
+                        if (arr[0] == refriName) {
+                            while(tempTxt.visibility != View.VISIBLE) {
+                                Log.d(TAG, "while . . .")
+                            }
+                            mainActivity.runOnUiThread {
+                                tempTxt.text = arr[1]
+                            }
+                        }
+                    }
+
+                    if (topic == "refri/logout" && msg == "success") {
+                        // Intent 생성
+                        val intent = Intent(mainActivity, LoginMain::class.java)
+
+                        // Activity 시작하기
+                        mainActivity.finish()
+                        startActivity(intent)
+                    }
+
+                    if (topic == "refri/sensors/func") {
+                        spinner.setSelection(msg.toInt())
                     }
                 }
             }
@@ -81,15 +130,21 @@ class RefrigeratorState : Fragment() {
                 println("Message delivered")
             }
         })
-//        mqttClient.subscribe("refri/sensors/temp")
+        mqttClient.subscribe(arrayOf("refri/sensors/temp", "refri/logout", "refri/refriname", "refri/sensors/func"))
         // MQTT ------------------------------
 
         // Spinner ----------------------------
         spinner.adapter = adapter
-        spinner.setSelection(0)
         spinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (position != 0) Toast.makeText(context, itemList[position], Toast.LENGTH_SHORT).show()
+                if (position != 0) {
+                    Toast.makeText(context, itemList[position], Toast.LENGTH_SHORT).show()
+                    if (mqttClient.isConnected()) {
+                        mqttClient.publish("refri/selectFunc", MqttMessage(position.toString().toByteArray()))
+                    } else {
+                        Log.e(TAG, "MQTT NOT CONNECTED")
+                    }
+                }
             }
 
             override fun onNothingSelected(p0: AdapterView<*>?) {
