@@ -91,15 +91,24 @@ class RefrigeratorState : Fragment() {
                                 infoTempTxt.visibility = View.VISIBLE
                                 infoFuncTxt.visibility = View.VISIBLE
                                 tempTxt.visibility = View.VISIBLE
+                                tempTxt.text = "0℃"
                                 spinner.visibility = View.VISIBLE
                             }
                         }
+                        Log.d(TAG, "refriname : ${refriName}")
                     }
 
-                    if (topic == "${refriName}/refri/sensors/temp") {
-                        while(tempTxt.visibility != View.VISIBLE) {}
-                        mainActivity.runOnUiThread {
-                            tempTxt.text = msg
+                    if (topic == "refri/sensors/temp") {
+                        val arr = msg.split("/")
+                        Log.d(TAG, "${arr[0]}, ${arr[1]}")
+
+                        if (arr[0] == refriName) {
+                            while(tempTxt.visibility != View.VISIBLE) {
+                                Log.d(TAG, "while . . .")
+                            }
+                            mainActivity.runOnUiThread {
+                                tempTxt.text = arr[1]
+                            }
                         }
                     }
 
@@ -111,21 +120,31 @@ class RefrigeratorState : Fragment() {
                         mainActivity.finish()
                         startActivity(intent)
                     }
+
+                    if (topic == "refri/sensors/func") {
+                        spinner.setSelection(msg.toInt())
+                    }
                 }
             }
             override fun deliveryComplete(token: IMqttDeliveryToken?) {
                 println("Message delivered")
             }
         })
-        mqttClient.subscribe(arrayOf("${mainActivity.ID}/refri/sensors/temp", "refri/logout", "refri/refriname"))
+        mqttClient.subscribe(arrayOf("refri/sensors/temp", "refri/logout", "refri/refriname", "refri/sensors/func"))
         // MQTT ------------------------------
 
         // Spinner ----------------------------
         spinner.adapter = adapter
-        spinner.setSelection(0)
         spinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (position != 0) Toast.makeText(context, itemList[position], Toast.LENGTH_SHORT).show()
+                if (position != 0) {
+                    Toast.makeText(context, itemList[position], Toast.LENGTH_SHORT).show()
+                    if (mqttClient.isConnected()) {
+                        mqttClient.publish("refri/selectFunc", MqttMessage(position.toString().toByteArray()))
+                    } else {
+                        Log.e(TAG, "MQTT NOT CONNECTED")
+                    }
+                }
             }
 
             override fun onNothingSelected(p0: AdapterView<*>?) {

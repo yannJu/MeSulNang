@@ -52,15 +52,18 @@ class AnalyzeDrunkResult : Fragment() {
         Log.d(TAG, "${TAG} is Create")
 
         _binding = FragmentAnalyzeDrunkResultBinding.inflate(inflater, container, false)
-        mainActivity = activity as MainActivity
+        mainActivity = context as MainActivity
 
         var analyze_img = File("${mainActivity.recordingFilePath}/${mainActivity.saveCamFile}")
         var analyze_voice_model = File("${mainActivity.recordingFilePath}/${mainActivity.saveMicModelFile}")
         var analyze_records = File("${mainActivity.recordingFilePath}/${mainActivity.saveMicFile}")
 
-        uploadWithTransferUtility("images/${mainActivity.saveCamFile}", analyze_img)
-        uploadWithTransferUtility("model-voice/${mainActivity.saveMicModelFile}", analyze_voice_model)
-        uploadWithTransferUtility("voice/${mainActivity.saveMicFile}", analyze_records)
+        uploadWithTransferUtility("", analyze_img)
+//        uploadWithTransferUtility("/model-voice/", analyze_voice_model)
+//        uploadWithTransferUtility("/voice/", analyze_records)
+//        uploadWithTransferUtility("images/${mainActivity.saveCamFile}", analyze_img)
+//        uploadWithTransferUtility("model-voice/${mainActivity.saveMicModelFile}", analyze_voice_model)
+//        uploadWithTransferUtility("voice/${mainActivity.saveMicFile}", analyze_records)
 
         // layout Views =============
         var txtLoad = binding.txtLoading
@@ -158,22 +161,24 @@ class AnalyzeDrunkResult : Fragment() {
     fun uploadWithTransferUtility(fileName: String, file: File) {
 
         val credentialsProvider = CognitoCachingCredentialsProvider(
-            context,
+            mainActivity,
             AWS_POOL_ID, // 자격 증명 풀 ID
             Regions.US_EAST_2 // 리전 (ck 해야함)
         )
 
-        TransferNetworkLossHandler.getInstance(context)
+        TransferNetworkLossHandler.getInstance(mainActivity)
 
         val transferUtility = TransferUtility.builder()
-            .context(context)
+            .context(mainActivity)
             .defaultBucket(AWS_STORAGE_BUCKET_NAME)
             .s3Client(AmazonS3Client(credentialsProvider, Region.getRegion(Regions.US_EAST_2)))
             .build()
 
+        Log.d(TAG, "///${transferUtility}")
+
         /* Store the new created Image file path */
 
-        val uploadObserver = transferUtility.upload(fileName, file, CannedAccessControlList.PublicRead)
+        val uploadObserver = transferUtility.upload(fileName, file, CannedAccessControlList.BucketOwnerFullControl)
 
         //CannedAccessControlList.PublicRead 읽기 권한 추가
 

@@ -34,8 +34,8 @@ class MainActivity : AppCompatActivity() {
     // Mqtt ----------------------
 //    val URL = "http://ex-alb-1767737241.us-east-2.elb.amazonaws.com"
 //    val brokerUrl = "tcp://team4-mqtt-lb-2494f2a6d28b9a68.elb.us-east-2.amazonaws.com:1883" // aws IP
-    val URL = "http://172.20.10.5:8000"
-    val brokerUrl = "tcp://172.20.10.5:1883" //Android IP
+    val URL = "http://172.30.1.68:8000"
+    val brokerUrl = "tcp://172.30.1.68:1883" //Android IP
     lateinit var mqttClient: MqttClient
     val clientID = "client_main"
     // Mqtt ----------------------
