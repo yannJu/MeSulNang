@@ -93,6 +93,7 @@ class RefrigeratorState : Fragment() {
                                 tempTxt.visibility = View.VISIBLE
                                 tempTxt.text = "0℃"
                                 spinner.visibility = View.VISIBLE
+                                spinner.setSelection(0)
                             }
                         }
                         Log.d(TAG, "refriname : ${refriName}")
@@ -121,16 +122,17 @@ class RefrigeratorState : Fragment() {
                         startActivity(intent)
                     }
 
-                    if (topic == "refri/sensors/func") {
+                    if (topic == "refri/sensors/init") {
                         val func_arr = msg.split("/")
-                        Log.d(TAG, "func_arr : ${func_arr[0]}, ${func_arr[1]}")
+                        Log.d(TAG, "func_arr : ${func_arr[0]}, ${func_arr[1]}, ${func_arr[2]}")
 
                         if (func_arr[0] == refriName) {
-                            while(spinner.visibility != View.VISIBLE) {
+                            while((spinner.visibility != View.VISIBLE) && (tempTxt.visibility != View.VISIBLE)) {
                                 Log.d(TAG, "while . . .")
                             }
                             mainActivity.runOnUiThread {
-                                spinner.setSelection(func_arr[1].toInt())
+                                tempTxt.setText(func_arr[1])
+                                spinner.setSelection(func_arr[2].toInt())
                             }
                         }
                     }
@@ -140,7 +142,7 @@ class RefrigeratorState : Fragment() {
                 println("Message delivered")
             }
         })
-        mqttClient.subscribe(arrayOf("refri/sensors/temp", "refri/logout", "refri/refriname", "refri/sensors/func"))
+        mqttClient.subscribe(arrayOf("refri/sensors/temp", "refri/logout", "refri/refriname", "refri/sensors/init"))
         // MQTT ------------------------------
 
         // Spinner ----------------------------

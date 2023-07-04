@@ -63,12 +63,12 @@ class AnalyzeDrunkResult : Fragment() {
             analyze_img
         )
         uploadWithTransferUtility(
-            "${awsID().AWS_STORAGE_BUCKET_NAME}/images",
+            "${awsID().AWS_STORAGE_BUCKET_NAME}/model-voice",
             "${mainActivity.saveMicModelFile}",
             analyze_records
         )
         uploadWithTransferUtility(
-            "${awsID().AWS_STORAGE_BUCKET_NAME}/images",
+            "${awsID().AWS_STORAGE_BUCKET_NAME}/voice",
             "${mainActivity.saveMicFile}",
             analyze_records
         )
@@ -149,6 +149,7 @@ class AnalyzeDrunkResult : Fragment() {
                                 resultImg.setImageResource(imgAry[2])
                             }
 
+
                             btnReturn.visibility = View.VISIBLE
                         }
                     }
@@ -167,7 +168,7 @@ class AnalyzeDrunkResult : Fragment() {
 
     // s3 upload Func ---------------------------
     fun uploadWithTransferUtility(filePath: String, fileName: String, file: File) {
-        var awsCredentials = BasicAWSCredentials(awsID().AWS_ACESS_KEY, awsID().AWS_SECRET_KEY)
+        var awsCredentials = BasicAWSCredentials(awsID().AWS_ACCESS_KEY, awsID().AWS_SECRET_KEY)
         var s3Client = AmazonS3Client(awsCredentials, Region.getRegion(Regions.US_EAST_2))
         var transferUtility =
             TransferUtility.builder().s3Client(s3Client).context(mainActivity).build()
