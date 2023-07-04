@@ -99,15 +99,15 @@ class RefrigeratorState : Fragment() {
                     }
 
                     if (topic == "refri/sensors/temp") {
-                        val arr = msg.split("/")
-                        Log.d(TAG, "${arr[0]}, ${arr[1]}")
+                        val temp_arr = msg.split("/")
+                        Log.d(TAG, "temp_arr : ${temp_arr[0]}, ${temp_arr[1]}")
 
-                        if (arr[0] == refriName) {
+                        if (temp_arr[0] == refriName) {
                             while(tempTxt.visibility != View.VISIBLE) {
                                 Log.d(TAG, "while . . .")
                             }
                             mainActivity.runOnUiThread {
-                                tempTxt.text = arr[1]
+                                tempTxt.text = temp_arr[1]
                             }
                         }
                     }
@@ -122,7 +122,17 @@ class RefrigeratorState : Fragment() {
                     }
 
                     if (topic == "refri/sensors/func") {
-                        spinner.setSelection(msg.toInt())
+                        val func_arr = msg.split("/")
+                        Log.d(TAG, "func_arr : ${func_arr[0]}, ${func_arr[1]}")
+
+                        if (func_arr[0] == refriName) {
+                            while(spinner.visibility != View.VISIBLE) {
+                                Log.d(TAG, "while . . .")
+                            }
+                            mainActivity.runOnUiThread {
+                                spinner.setSelection(func_arr[1].toInt())
+                            }
+                        }
                     }
                 }
             }
@@ -140,7 +150,7 @@ class RefrigeratorState : Fragment() {
                 if (position != 0) {
                     Toast.makeText(context, itemList[position], Toast.LENGTH_SHORT).show()
                     if (mqttClient.isConnected()) {
-                        mqttClient.publish("refri/selectFunc", MqttMessage(position.toString().toByteArray()))
+                        mqttClient.publish("refri/selectFunc", MqttMessage("${refriName}/${position}".toByteArray()))
                     } else {
                         Log.e(TAG, "MQTT NOT CONNECTED")
                     }

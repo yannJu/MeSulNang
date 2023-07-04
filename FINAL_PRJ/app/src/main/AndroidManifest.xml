@@ -12,7 +12,6 @@
     <!-- 음성 권한 연결 속성-->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <!-- s3 upload 속성 -->
-    <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <application

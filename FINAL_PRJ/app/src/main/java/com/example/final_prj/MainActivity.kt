@@ -43,9 +43,9 @@ class MainActivity : AppCompatActivity() {
     // External Mem Dir ----------
     val recordingFilePath = "/data/data/com.example.final_prj/analyze"
     val filePath = File(recordingFilePath)
-    val saveCamFile = "${ID}_analyze_img.jpg"
-    val saveMicModelFile = "${ID}_model_record.mp4"
-    val saveMicFile = "${ID}_record.mp4"
+    lateinit var saveCamFile: String
+    lateinit var saveMicModelFile: String
+    lateinit var saveMicFile: String
 
     // back btn
     var isBackBtnClick = 0
@@ -61,6 +61,10 @@ class MainActivity : AppCompatActivity() {
         // ID 출력
         ID = intent.getStringExtra("ID")!!
         Log.d(TAG, "ID : ${ID}")
+
+        saveCamFile = "${ID}_analyze_img.jpg"
+        saveMicModelFile = "${ID}_model_record.mp4"
+        saveMicFile = "${ID}_record.mp4"
         // MQTT ------------------------------
         try {
             mqttClient = MqttClient(brokerUrl, clientID, MemoryPersistence())

@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.auth.CognitoCachingCredentialsProvider
 import com.amazonaws.mobileconnectors.s3.transfermanager.TransferManager
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener
@@ -31,14 +32,11 @@ class AnalyzeDrunkResult : Fragment() {
     val TAG = "[[Tab_AnalyzeDrunk_Result]]"
     var _binding: FragmentAnalyzeDrunkResultBinding? = null
     val binding get() = _binding!!
-    lateinit var mainActivity:MainActivity
+    lateinit var mainActivity: MainActivity
 
     private lateinit var mqttClient: MqttClient
     var URL = ""
 
-    // S3 -------------
-    val AWS_STORAGE_BUCKET_NAME = awsID().AWS_STORAGE_BUCKET_NAME
-    val AWS_POOL_ID = awsID().AWS_POOL_ID
     // S3 -------------
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,15 +53,25 @@ class AnalyzeDrunkResult : Fragment() {
         mainActivity = context as MainActivity
 
         var analyze_img = File("${mainActivity.recordingFilePath}/${mainActivity.saveCamFile}")
-        var analyze_voice_model = File("${mainActivity.recordingFilePath}/${mainActivity.saveMicModelFile}")
+        var analyze_voice_model =
+            File("${mainActivity.recordingFilePath}/${mainActivity.saveMicModelFile}")
         var analyze_records = File("${mainActivity.recordingFilePath}/${mainActivity.saveMicFile}")
 
-        uploadWithTransferUtility("", analyze_img)
-//        uploadWithTransferUtility("/model-voice/", analyze_voice_model)
-//        uploadWithTransferUtility("/voice/", analyze_records)
-//        uploadWithTransferUtility("images/${mainActivity.saveCamFile}", analyze_img)
-//        uploadWithTransferUtility("model-voice/${mainActivity.saveMicModelFile}", analyze_voice_model)
-//        uploadWithTransferUtility("voice/${mainActivity.saveMicFile}", analyze_records)
+        uploadWithTransferUtility(
+            "${awsID().AWS_STORAGE_BUCKET_NAME}/images",
+            "${mainActivity.saveCamFile}",
+            analyze_img
+        )
+        uploadWithTransferUtility(
+            "${awsID().AWS_STORAGE_BUCKET_NAME}/images",
+            "${mainActivity.saveMicModelFile}",
+            analyze_records
+        )
+        uploadWithTransferUtility(
+            "${awsID().AWS_STORAGE_BUCKET_NAME}/images",
+            "${mainActivity.saveMicFile}",
+            analyze_records
+        )
 
         // layout Views =============
         var txtLoad = binding.txtLoading
@@ -81,7 +89,7 @@ class AnalyzeDrunkResult : Fragment() {
             "술기운이 올라와요~",
             "취하셨군요!"
         )
-        var resultColorAry = arrayOf("#75d327", "#eb9e3a","#f57f7f")
+        var resultColorAry = arrayOf("#75d327", "#eb9e3a", "#f57f7f")
         var msgAry = arrayOf(
             "술을 마신다고 문제가 \n해결되는 것은 아니지만\n우유를 마신다고 \n해결되는 것도 없다\n\n-스코틀랜드 격언",
             "술을 물처럼 마시는 자는\n술을 마실 가치가 없다\n\n-프리드리히 V. 보덴슈테트",
@@ -104,10 +112,11 @@ class AnalyzeDrunkResult : Fragment() {
                 throwable?.printStackTrace()
                 try {
                     mqttClient.reconnect()
-                } catch(ex: MqttException){
+                } catch (ex: MqttException) {
                     ex.printStackTrace()
                 }
             }
+
             override fun messageArrived(topic: String?, mqttMessage: MqttMessage?) {
                 val msg = mqttMessage.toString()
                 Log.d(TAG, "${topic}->[[${msg}]]")
@@ -128,14 +137,12 @@ class AnalyzeDrunkResult : Fragment() {
                                 txtResult.setTextColor(Color.parseColor(resultColorAry[0]))
                                 txtResultMsg.text = msgAry[0]
                                 resultImg.setImageResource(imgAry[0])
-                            }
-                            else if (msg == "1") {
+                            } else if (msg == "1") {
                                 txtResult.text = resultAry[1]
                                 txtResult.setTextColor(Color.parseColor(resultColorAry[1]))
                                 txtResultMsg.text = msgAry[1]
                                 resultImg.setImageResource(imgAry[1])
-                            }
-                            else if (msg == "2") {
+                            } else if (msg == "2") {
                                 txtResult.text = resultAry[2]
                                 txtResult.setTextColor(Color.parseColor(resultColorAry[2]))
                                 txtResultMsg.text = msgAry[2]
@@ -147,6 +154,7 @@ class AnalyzeDrunkResult : Fragment() {
                     }
                 }
             }
+
             override fun deliveryComplete(token: IMqttDeliveryToken?) {
                 println("Message delivered")
             }
@@ -158,27 +166,14 @@ class AnalyzeDrunkResult : Fragment() {
     }
 
     // s3 upload Func ---------------------------
-    fun uploadWithTransferUtility(fileName: String, file: File) {
-
-        val credentialsProvider = CognitoCachingCredentialsProvider(
-            mainActivity,
-            AWS_POOL_ID, // 자격 증명 풀 ID
-            Regions.US_EAST_2 // 리전 (ck 해야함)
-        )
-
-        TransferNetworkLossHandler.getInstance(mainActivity)
-
-        val transferUtility = TransferUtility.builder()
-            .context(mainActivity)
-            .defaultBucket(AWS_STORAGE_BUCKET_NAME)
-            .s3Client(AmazonS3Client(credentialsProvider, Region.getRegion(Regions.US_EAST_2)))
-            .build()
-
-        Log.d(TAG, "///${transferUtility}")
+    fun uploadWithTransferUtility(filePath: String, fileName: String, file: File) {
+        var awsCredentials = BasicAWSCredentials(awsID().AWS_ACESS_KEY, awsID().AWS_SECRET_KEY)
+        var s3Client = AmazonS3Client(awsCredentials, Region.getRegion(Regions.US_EAST_2))
+        var transferUtility =
+            TransferUtility.builder().s3Client(s3Client).context(mainActivity).build()
 
         /* Store the new created Image file path */
-
-        val uploadObserver = transferUtility.upload(fileName, file, CannedAccessControlList.BucketOwnerFullControl)
+        val uploadObserver = transferUtility.upload(filePath, fileName, file)
 
         //CannedAccessControlList.PublicRead 읽기 권한 추가
 
@@ -187,7 +182,7 @@ class AnalyzeDrunkResult : Fragment() {
             override fun onStateChanged(id: Int, state: TransferState) {
                 if (state == TransferState.COMPLETED) {
                     // Handle a completed upload
-                    Log.d(TAG, "Upload-FIN")
+                    Log.d(TAG, "${fileName} Upload-FIN")
                 }
             }
 
@@ -200,32 +195,5 @@ class AnalyzeDrunkResult : Fragment() {
                 Log.d(TAG, "UPLOAD ERROR - - ID: $id - - EX: ${ex.message.toString()}")
             }
         })
-
-        // If you prefer to long-poll for updates
-        if (uploadObserver.state == TransferState.COMPLETED) {
-            /* Handle completion */
-
-        }
     }
-
-    // sol2
-//    setTransferListener(new TransferListener() {
-//        @Override
-//        public void onStateChanged(int id, TransferState state) {
-//            Log.d(TAG, "onStateChanged: " + id + ", " + state.toString());
-//
-//        }
-//
-//        @Override
-//        public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
-//            float percentDonef = ((float) bytesCurrent / (float) bytesTotal) * 100;
-//            int percentDone = (int)percentDonef;
-//            Log.d(TAG, "ID:" + id + " bytesCurrent: " + bytesCurrent + " bytesTotal: " + bytesTotal + " " + percentDone + "%");
-//        }
-//
-//        @Override
-//        public void onError(int id, Exception ex) {
-//            Log.e(TAG, ex.getMessage());
-//        }
-//    });
 }
