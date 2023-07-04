@@ -15,7 +15,8 @@ from gpiozero import Button, LED
 # MQTT 통신
 import paho.mqtt.client as mqtt
 
-host_id = '172.30.1.68' # local IP(=Android)
+# host_id = '172.30.1.68' # local IP(=Android)
+host_id = "team4-mqtt-lb-2494f2a6d28b9a68.elb.us-east-2.amazonaws.com"
 port = 1883
 # GPIO ----------------------
 GPIO.setmode(GPIO.BCM)
@@ -100,16 +101,16 @@ class Refrigerator:
             router = msg.topic.split("/")
             
             if (router[-1] ==  "refriname" and value == self.ID):
-                temp_topic = self.topic + "temp"
-                func_topic = self.topic + "func"
-                temp_msg = "{0}/{1:0.1f}℃".format(self.ID, self.temp)
-                func_msg = "{}".format(self.func_position)
+                topic = self.topic + "init"
+                msg = "{0}/{1:0.1f}℃/{2}".format(self.ID, self.getTemp(self.temp_sensor, self.temp_pin), self.func_position)
                 
-                self.client.publish(temp_topic, temp_msg)
-                self.client.publish(func_topic, func_msg)
+                self.client.publish(topic, msg)
             elif (router[-1] == "selectFunc"):
-                self.goalTempRange =  self.tempAry[int(value)]
-                self.func_position = int(value)
+                valueAry = value.split("/")
+                
+                if valueAry[0] == self.ID:
+                    self.goalTempRange =  self.tempAry[int(valueAry[1])]
+                    self.func_position = int(valueAry[1])
     # MQTT ========================
                     
     def handle_upload_img(self, img):
@@ -164,20 +165,25 @@ class Refrigerator:
             
             time.sleep(0.5)
             
+    def getTemp(self, sensor, temp_pin):
+        _, temperature = Adafruit_DHT.read_retry(sensor, temp_pin)
+        
+        return temperature
+            
     def handle_temp(self, sensor, temp_pin):
         topic = ""
         
         while True:
-            _, temperature = Adafruit_DHT.read_retry(sensor, temp_pin)
+            temperature = self.getTemp(sensor, temp_pin)
             
-            # if temperature is not None:
-            topic = self.topic + "temp"
-            msg = "{0}/{1:0.1f}℃".format(self.ID, self.temp)
-            self.temp = temperature
-            
-            print("Temp : ", topic, msg)
-            self.client.publish(topic, msg)
-            
+            if temperature is not None:
+                topic = self.topic + "temp"
+                msg = "{0}/{1:0.1f}℃".format(self.ID, self.temp)
+                self.temp = temperature
+                
+                print("Temp : ", topic, msg)
+                self.client.publish(topic, msg)
+                
             time.sleep(30)
             
     def setSpeed(self, speed):
@@ -196,11 +202,10 @@ class Refrigerator:
                 if (self.speed < 90): self.speed += 10
             self.fan.setSpeed(self.speed) 
             
-            print("Speed : ", self.speed)
             time.sleep(0.5)
             
 # sensor Pins ===================
-refri_ID = "yanfri"
+refri_ID = "yanfri1"
 led_pin1 = 20
 led_pin2 = 17
 reed_pin = 21
